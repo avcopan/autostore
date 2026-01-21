@@ -18,6 +18,7 @@ platforms = ["linux-64"]
 autostore = { path = ".", editable = true }
 
 [tool.pixi.dependencies]
+sqlmodel = ">=0.0.31,<0.0.32"
 
 [tool.pixi.tasks]
 
@@ -29,6 +30,7 @@ pytest = "*"
 pytest-cov = "*"
 lefthook = "*"
 bumpver = "*"
+ipykernel = ">=7.1.0,<8"
 
 [tool.pixi.feature.docs.dependencies]
 sphinx = "*"
