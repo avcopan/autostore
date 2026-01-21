@@ -30,7 +30,7 @@ pytest = "*"
 pytest-cov = "*"
 lefthook = "*"
 bumpver = "*"
-ipykernel = ">=7.1.0,<8"
+ipykernel = "*"
 
 [tool.pixi.feature.docs.dependencies]
 sphinx = "*"
@@ -38,9 +38,18 @@ myst-parser = "*"
 pydata-sphinx-theme = "*"
 sphinx-autodoc2 = "*"
 
+[tool.pixi.feature.local.pypi-dependencies]
+automol = { path = "../automol", editable = true }
+autopilot = { path = "../autopilot", editable = true }
+
+[tool.pixi.feature.local.pypi-options.dependency-overrides]
+automol = { path = "../automol", editable = true }
+autopilot = { path = "../autopilot", editable = true }
+
 [tool.pixi.environments]
 default = { solve-group = "default" }
 dev = { features = ["dev", "docs"], solve-group = "default"}
+local = { features = ["local"], solve-group = "default"}
 
 [tool.pixi.feature.dev.tasks]
 # Individual tasks for pre-commit hooks (must be added to lefthook.yaml)
