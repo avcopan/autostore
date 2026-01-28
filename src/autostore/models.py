@@ -65,8 +65,7 @@ class GeometryRow(SQLModel, table=True):
             geo = qc.structure.geometry(res.input_data.structure)
             return cls(
                 symbols=geo.symbols,
-                # Need to find a better approach to typing the coordinates field!!
-                coordinates=geo.coordinates.tolist(),  # ty:ignore[unresolved-attribute]
+                coordinates=geo.coordinates.tolist(),
                 charge=geo.charge,
                 spin=geo.spin,
             )
