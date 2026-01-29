@@ -1,6 +1,6 @@
 """autostore."""
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 from . import qc, read, write
 from .calcn import Calculation
