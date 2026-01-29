@@ -1,7 +1,7 @@
 """Calculation row model and associated models and functions."""
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from qcio import ProgramInput, Results
 from sqlalchemy import event
@@ -91,7 +91,9 @@ class CalculationRow(SQLModel, table=True):
         sa_column=Column(JSON),
     )
 
-    energy: Optional["EnergyRow"] = Relationship(back_populates="calculation")
+    energies: list["EnergyRow"] = Relationship(
+        back_populates="calculation", cascade_delete=True
+    )
     hashes: list["CalculationHashRow"] = Relationship(
         back_populates="calculation", cascade_delete=True
     )

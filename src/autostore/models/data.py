@@ -33,12 +33,12 @@ class EnergyRow(SQLModel, table=True):
     __tablename__ = "energy"
 
     geometry_id: int | None = Field(
-        default=None, foreign_key="geometry.id", primary_key=True
+        default=None, foreign_key="geometry.id", primary_key=True, ondelete="CASCADE"
     )
     calculation_id: int | None = Field(
-        default=None, foreign_key="calculation.id", primary_key=True
+        default=None, foreign_key="calculation.id", primary_key=True, ondelete="CASCADE"
     )
     value: float
 
-    calculation: CalculationRow = Relationship(back_populates="energy")
-    geometry: GeometryRow = Relationship(back_populates="energy")
+    calculation: CalculationRow = Relationship(back_populates="energies")
+    geometry: GeometryRow = Relationship(back_populates="energies")

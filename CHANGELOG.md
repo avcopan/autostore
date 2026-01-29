@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Calculation hash table populated by event listener
 - QCIO ProgramInput generation from Calculation object
 
+### Fixed
+- Specify Calculation->Energy and Geometry->Energy as many-to-one relationships
+
 ## [0.0.2] - 2026-01-28
 ### Added
 - `qc` submodule for interconversion with `QCIO` objects

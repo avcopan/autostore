@@ -1,6 +1,6 @@
 """Geometry row model and associated models and functions."""
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from automol import Geometry, geom
 from automol.types import FloatArray
@@ -56,7 +56,9 @@ class GeometryRow(SQLModel, table=True):
     )
     # ^ Populated by event listener below
 
-    energy: Optional["EnergyRow"] = Relationship(back_populates="geometry")
+    energies: list["EnergyRow"] = Relationship(
+        back_populates="geometry", cascade_delete=True
+    )
 
     @classmethod
     def from_results(cls, res: Results) -> "GeometryRow":
