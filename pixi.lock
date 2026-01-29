@@ -643,6 +643,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
       - conda: .
       - pypi: https://files.pythonhosted.org/packages/cf/22/fdc2e30d43ff853720042fa15baa3e6122722be1a7950a98233ebb55cd71/eval_type_backport-0.3.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/23/06/b4f06ca7afb5d9e942c642980c308ffcfa1fa0e8b0a3ddbec78483ef1614/keepachangelog-2.0.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/93/d7/f12f520a35d8ff5cd647d37627bcf1be98f701c4ab69b520164214ba7e77/qcconst-0.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/00/2e/e659ff5596693a80388fb360e18af07a73242726e6de8fb340e0c0bac942/qcio-0.16.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl
@@ -853,6 +854,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
       - conda: .
       - pypi: https://files.pythonhosted.org/packages/cf/22/fdc2e30d43ff853720042fa15baa3e6122722be1a7950a98233ebb55cd71/eval_type_backport-0.3.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/23/06/b4f06ca7afb5d9e942c642980c308ffcfa1fa0e8b0a3ddbec78483ef1614/keepachangelog-2.0.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/93/d7/f12f520a35d8ff5cd647d37627bcf1be98f701c4ab69b520164214ba7e77/qcconst-0.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/00/2e/e659ff5596693a80388fb360e18af07a73242726e6de8fb340e0c0bac942/qcio-0.16.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl
@@ -1063,6 +1065,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
       - conda: .
       - pypi: https://files.pythonhosted.org/packages/cf/22/fdc2e30d43ff853720042fa15baa3e6122722be1a7950a98233ebb55cd71/eval_type_backport-0.3.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/23/06/b4f06ca7afb5d9e942c642980c308ffcfa1fa0e8b0a3ddbec78483ef1614/keepachangelog-2.0.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/93/d7/f12f520a35d8ff5cd647d37627bcf1be98f701c4ab69b520164214ba7e77/qcconst-0.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/00/2e/e659ff5596693a80388fb360e18af07a73242726e6de8fb340e0c0bac942/qcio-0.16.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl
@@ -2414,6 +2417,16 @@ packages:
   - pkg:pypi/jupyter-core?source=hash-mapping
   size: 65503
   timestamp: 1760643864586
+- pypi: https://files.pythonhosted.org/packages/23/06/b4f06ca7afb5d9e942c642980c308ffcfa1fa0e8b0a3ddbec78483ef1614/keepachangelog-2.0.0-py3-none-any.whl
+  name: keepachangelog
+  version: 2.0.0
+  sha256: 0b2259fd73b55f2b99e61035ff83f3d86d0f2764841a7e2de86e31e675e42fee
+  requires_dist:
+  - httpx==0.27.* ; extra == 'testing'
+  - starlette==0.37.* ; extra == 'testing'
+  - flask-restx==1.* ; extra == 'testing'
+  - pytest-cov==5.* ; extra == 'testing'
+  requires_python: '>=3.9'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/keyutils-1.6.3-hb9d3cd8_0.conda
   sha256: 0960d06048a7185d3542d850986d807c6e37ca2e644342dd0c72feefcf26c2a4
   md5: b38117a3c920364aff79f870c984b4a3
