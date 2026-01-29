@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Calculation object with hash registry
 - Calculation hash table populated by event listener
 - Interconversion of Calculation and QCIO ProgramInput objects
+- Read energy from database
 
 ### Fixed
 - Specify Calculation-Energy and Geometry-Energy as many-to-one relationships

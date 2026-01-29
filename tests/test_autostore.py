@@ -2,11 +2,12 @@
 
 from collections.abc import Iterator
 
+import numpy as np
 import pytest
+from automol import Geometry
 from qcio import Results
-from sqlmodel import select
 
-from autostore import Database, EnergyRow, write
+from autostore import Calculation, Database, read, write
 
 
 @pytest.fixture
@@ -20,7 +21,22 @@ def database() -> Iterator[Database]:
 
 
 @pytest.fixture
-def water_energy_results() -> Results:
+def water() -> Geometry:
+    """Water geometry fixture."""
+    return Geometry(
+        symbols=["O", "H", "H"],
+        coordinates=[[0, 0, 0], [1, 0, 0], [0, 1, 0]],  # ty:ignore[invalid-argument-type]
+    )
+
+
+@pytest.fixture
+def xtb_calculation() -> Calculation:
+    """XTB calculation fixture."""
+    return Calculation(program="crest", method="gfn2")
+
+
+@pytest.fixture
+def water_xtb_energy_results() -> Results:
     """Water energy calculation results fixture."""
     return Results.model_validate(
         {
@@ -45,11 +61,14 @@ def water_energy_results() -> Results:
     )
 
 
-def test_energy(water_energy_results: Results, database: Database) -> None:
-    """Stub test to ensure the test suite runs."""
-    write.energy(water_energy_results, database)
-
-    with database.session() as session:
-        ene_rows = session.exec(select(EnergyRow)).all()
-        for ene_row in ene_rows:
-            print(repr(ene_row))  # noqa: T201
+def test_energy(
+    water: Geometry,
+    xtb_calculation: Calculation,
+    water_xtb_energy_results: Results,
+    database: Database,
+) -> None:
+    """Test writing and reading of the energy."""
+    write.energy(water_xtb_energy_results, database)
+    energy = read.energy(water, xtb_calculation, db=database, hash_name="minimal")
+    assert energy is not None
+    assert np.isclose(energy, -5.062316802835694), f"{energy = }"
