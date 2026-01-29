@@ -9,9 +9,10 @@ from pydantic import ConfigDict
 from qcio import ProgramInput, Results
 from sqlalchemy import event
 from sqlalchemy.types import JSON, String
-from sqlmodel import Column, Field, Relationship, SQLModel
+from sqlmodel import Column, Field, Relationship, Session, SQLModel
 
 from . import qc
+from .calcn import Calculation, calculation_hash, hash_registry
 from .types import FloatArrayTypeDecorator, PathTypeDecorator
 
 
@@ -49,7 +50,9 @@ class GeometryRow(SQLModel, table=True):
     coordinates: FloatArray = Field(sa_column=Column(FloatArrayTypeDecorator))
     charge: int = 0
     spin: int = 0
-    hash: str = Field(sa_column=Column(String(64), index=True, nullable=True))
+    hash: str = Field(
+        sa_column=Column(String(64), index=True, nullable=True, unique=True)
+    )
     # ^ Populated by event listener below
 
     energy: Optional["EnergyRow"] = Relationship(back_populates="geometry")
@@ -198,6 +201,29 @@ class CalculationRow(SQLModel, table=True):
     )
 
     energy: Optional["EnergyRow"] = Relationship(back_populates="calculation")
+    hashes: list["CalculationHashRow"] = Relationship(
+        back_populates="calculation", cascade_delete=True
+    )
+
+    def to_calculation(self: "CalculationRow") -> Calculation:
+        """Reconstruct Calculation object from row."""
+        return Calculation(
+            program=self.program,
+            method=self.method,
+            basis=self.basis,
+            input=self.input,
+            keywords=self.keywords,
+            cmdline_args=self.cmdline_args,
+            files=self.files,
+            calctype=self.calctype,
+            program_version=self.program_version,
+            scratch_dir=self.scratch_dir,
+            wall_time=self.wall_time,
+            hostname=self.hostname,
+            hostcpus=self.hostcpus,
+            hostmem=self.hostmem,
+            extras=self.extras,
+        )
 
     @classmethod
     def from_results(cls, res: Results) -> "CalculationRow":
@@ -245,6 +271,55 @@ class CalculationRow(SQLModel, table=True):
     #   - cmdline_args
     #   - files
     # These could be used for programs like PySCF that do not use an input file.
+
+
+class CalculationHashRow(SQLModel, table=True):
+    """
+    Hash value for a calculation.
+
+    One row corresponds to one hash type applied to one calculation.
+    """
+
+    __tablename__ = "calculation_hash"
+
+    id: int | None = Field(default=None, primary_key=True)
+    calculation_id: int = Field(
+        foreign_key="calculation.id", index=True, nullable=False, ondelete="CASCADE"
+    )
+    name: str = Field(index=True)
+    value: str = Field(
+        sa_column=Column(String(64), index=True, nullable=False, unique=True)
+    )
+
+    calculation: CalculationRow = Relationship(back_populates="hashes")
+
+
+@event.listens_for(Session, "after_flush")
+def populate_calculation_hashes(session, flush_context) -> None:  # noqa: ANN001, ARG001
+    """Populate the 'minimal' hash for newly added CalculationRow objects."""
+    available = set(hash_registry.available())
+
+    for row in session.new:
+        if not isinstance(row, CalculationRow):
+            continue
+
+        existing = {h.name for h in row.hashes}
+        missing = available - existing
+        if not missing:
+            continue
+
+        calc = row.to_calculation()
+
+        for name in missing:
+            value = calculation_hash(calc, name=name)
+
+            session.add(
+                CalculationHashRow(
+                    calculation=row,
+                    name=name,
+                    value=value,
+                )
+            )
 
 
 class EnergyRow(SQLModel, table=True):
