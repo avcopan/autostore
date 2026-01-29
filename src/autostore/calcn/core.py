@@ -2,8 +2,11 @@
 
 from pathlib import Path
 
+from automol import Geometry
 from pydantic import BaseModel, Field
+from qcio import CalcType, Model, ProgramInput
 
+from .. import qc
 from .util import CalculationDict, hash_from_dict, project_keywords
 
 
@@ -63,6 +66,19 @@ class Calculation(BaseModel):
     hostmem: int | None = None
     # Extra metadata:
     extras: dict[str, str | dict | None] = Field(default_factory=dict)
+
+    def to_qcio_program_input(self, geo: Geometry, calctype: CalcType) -> ProgramInput:
+        """Convert to QCIO ProgramInput object."""
+        model = Model(method=self.method, basis=self.basis)
+        return ProgramInput(
+            calctype=calctype,
+            structure=qc.structure.from_geometry(geo),
+            model=model,
+            keywords=self.keywords,
+            cmdline_args=self.cmdline_args,
+            files=self.files,  # ty:ignore[invalid-argument-type]
+            extras=self.extras,
+        )
 
 
 def projected_hash(calc: Calculation, template: Calculation | CalculationDict) -> str:
