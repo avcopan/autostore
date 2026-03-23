@@ -2,7 +2,7 @@
 
 __version__ = "0.0.3"
 
-from . import qc, read, write, fetch
+from . import fetch, qc, read, write
 from .calcn import Calculation
 from .database import Database
 from .models import CalculationRow, EnergyRow, GeometryRow

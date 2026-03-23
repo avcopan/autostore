@@ -1,5 +1,4 @@
 """Write to database."""
-from autostore.models.stationary import StationaryPointRow
 
 from qcio import Results
 
@@ -29,7 +28,7 @@ def energy(res: Results, db: Database) -> None:
         session.commit()
 
 
-def stationary_point(res: Results, db: Database, *, order: int = -1) -> None:
+def stationary_point(res: Results, db: Database, *, order: int) -> None:
     """
     Write stationary point to database.
 
@@ -40,7 +39,7 @@ def stationary_point(res: Results, db: Database, *, order: int = -1) -> None:
     db
         Database connection manager.
     order
-        Order of the stationary point (e.g., minimum = 0, transition = 1, unassigned = -1)
+        Order of the stationary point (e.g., minimum = 0, transition = 1)
 
     """
     with db.session() as session:

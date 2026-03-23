@@ -2,10 +2,10 @@
 
 from typing import TYPE_CHECKING
 
-from sqlmodel import Field, Relationship, SQLModel
+import automol
 from sqlalchemy import event
 from sqlalchemy.orm import Session
-import automol
+from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from .calculation import CalculationRow
@@ -47,7 +47,7 @@ class StationaryPointRow(SQLModel, table=True):
     calculation_id
         Foreign key to the calculation producing the stationary point.
     order
-        Order of the stationary point (e.g., minimum = 0, transition = 1, unassigned = -1)
+        Order of the stationary point (e.g., minimum = 0, transition = 1)
 
     Linked Models
     -------------
@@ -114,11 +114,7 @@ def generate_stationary_inchi(mapper, connection, target: StationaryPointRow) ->
 
     try:
         # NOTE: If target.geometry isn't loaded, we need to fetch it
-        geo_row: GeometryRow = target.geometry  # noqa: F823
-        if not geo_row:
-            from .geometry import GeometryRow  # Avoid circularity # noqa: PLC0415
-
-            geo_row = session.get(GeometryRow, target.geometry_id)  # ty:ignore[invalid-assignment]
+        geo_row: GeometryRow = target.geometry
 
         mol = geo_row.to_mol()
         inchi_string = automol.mol.inchi(mol)
@@ -152,9 +148,10 @@ def generate_stationary_inchi(mapper, connection, target: StationaryPointRow) ->
 
         session.commit()
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         session.rollback()
-        print(f"Failed to generate InChI for StationaryPoint {target.id}: {e}")
+        msg = f"Failed to generate InChI {target.id}"
+        raise RuntimeError(msg) from e
 
     finally:
         session.close()

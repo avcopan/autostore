@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from qcio import ProgramInput, Results
-from sqlalchemy import UniqueConstraint, event
+from sqlalchemy import event
 from sqlalchemy.types import JSON, String
 from sqlmodel import Column, Field, Relationship, Session, SQLModel
 

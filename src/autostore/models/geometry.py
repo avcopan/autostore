@@ -6,15 +6,14 @@ from automol import Geometry, geom
 from automol.types import FloatArray
 from pydantic import ConfigDict
 from qcio import ProgramInput, Results
+from rdkit import Chem
+from rdkit.Chem import Mol, rdDetermineBonds
 from sqlalchemy import event
 from sqlalchemy.types import JSON, String
 from sqlmodel import Column, Field, Relationship, SQLModel
-from rdkit.Chem import Mol, rdDetermineBonds
 
 from .. import qc
 from ..types import FloatArrayTypeDecorator
-
-from rdkit import Chem
 
 if TYPE_CHECKING:
     from .data import EnergyRow
