@@ -20,6 +20,7 @@ def energy(res: Results, db: Database) -> None:
     with db.session() as session:
         geo_row = GeometryRow.from_results(res)
         calc_row = CalculationRow.from_results(res)
+
         ene_row = EnergyRow(
             value=res.data.energy, calculation=calc_row, geometry=geo_row
         )
@@ -42,6 +43,8 @@ def stationary_point(res: Results, db: Database, *, order: int) -> StationaryPoi
         Order of the stationary point (e.g., minimum = 0, transition = 1)
 
     """
+    final_energy = res.data.energies[-1]
+
     with db.session() as session:
         geo_row = GeometryRow.from_results(res)
         calc_row = CalculationRow.from_results(res)
@@ -50,6 +53,9 @@ def stationary_point(res: Results, db: Database, *, order: int) -> StationaryPoi
             geometry=geo_row, calculation=calc_row, order=order
         )
 
+        ene_row = EnergyRow(value=final_energy, calculation=calc_row, geometry=geo_row)
+
+        session.add(ene_row)
         session.add(stp_row)
         session.commit()
 
