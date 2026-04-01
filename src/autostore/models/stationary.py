@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel, select
 
 if TYPE_CHECKING:
     from .calculation import CalculationRow
@@ -119,35 +119,26 @@ def generate_stationary_inchi(mapper, connection, target: StationaryPointRow) ->
 
     try:
         # NOTE: If target.geometry isn't loaded, we need to fetch it
-        geo_row = target.geometry
-        inchi_string = geometry.row_to_inchi(geo_row)
+        stp_row = target
+        geo_row = stp_row.geometry
+        inchi_string = geometry.inchi(geo_row)
 
-        identity: IdentityRow | None = (
-            session.query(IdentityRow)
-            .filter_by(algorithm="InChI", identifier=inchi_string)
-            .first()
+        statement = select(IdentityRow).where(
+            IdentityRow.algorithm == "InChI", IdentityRow.identifier == inchi_string
         )
+        id_row = session.exec(statement).first()
 
-        if not identity:
-            identity = IdentityRow(
+        if id_row is None:
+            id_row = IdentityRow(
                 type="stereoisomer",
                 algorithm="InChI",
                 identifier=inchi_string,
             )
-            session.add(identity)
+            session.add(id_row)
             session.flush()
 
-        link_exists = (
-            session.query(StationaryIdentityLink)
-            .filter_by(stationary_id=target.id, identity_id=identity.id)
-            .first()
-        )
-
-        if not link_exists:
-            new_link = StationaryIdentityLink(
-                stationary_id=target.id, identity_id=identity.id
-            )
-            session.add(new_link)
+        link = StationaryIdentityLink(stationary_id=stp_row.id, identity_id=id_row.id)
+        session.add(link)
 
         session.commit()
 
@@ -155,6 +146,3 @@ def generate_stationary_inchi(mapper, connection, target: StationaryPointRow) ->
         session.rollback()
         msg = f"Failed to generate InChI {target.id}"
         raise RuntimeError(msg) from e
-
-    finally:
-        session.close()

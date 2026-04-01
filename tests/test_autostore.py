@@ -69,7 +69,7 @@ def test_energy(
 ) -> None:
     """Test writing and reading of the energy."""
     final_energy = water_xtb_energy_results.data.energy
-    calc_row, geo_row = qc.results.res_to_rows(water_xtb_energy_results)
+    calc_row, geo_row = qc.results.rows(water_xtb_energy_results)
     write.energy(final_energy, calc_row=calc_row, geo_row=geo_row, db=database)
     energy = fetch.energy(water, xtb_calculation, hash_name="minimal", db=database)
     assert energy is not None

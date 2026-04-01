@@ -15,7 +15,7 @@ from ..models import CalculationRow, GeometryRow
 from . import structure
 
 
-def prog_from_rows(
+def from_rows(
     calc: Calculation | CalculationRow,
     geo: Geometry,
     calctype: CalcType,
@@ -37,7 +37,7 @@ def prog_from_rows(
         QCIO DualProgramInput/ProgramInput
     """
     model = Model(method=calc.method, basis=calc.basis)
-    struc = automol.qc.structure.struc_from_geometry(geo)
+    struc = automol.qc.structure.from_geometry(geo)
 
     data = {
         "keywords": calc.keywords,
@@ -63,9 +63,7 @@ def prog_from_rows(
     )
 
 
-def prog_to_rows(
-    prog_input: ProgramInput, prog: str
-) -> tuple[CalculationRow, GeometryRow]:
+def rows(prog_input: ProgramInput, prog: str) -> tuple[CalculationRow, GeometryRow]:
     """Extract data from QCIO into a Calculation."""
     data = {
         "cmdline_args": prog_input.cmdline_args,
@@ -93,6 +91,6 @@ def prog_to_rows(
             **data,  # ty:ignore[invalid-argument-type]
         )
 
-    geo_row = structure.struc_to_row(prog_input.structure)
+    geo_row = structure.geometry_row(prog_input.structure)
 
     return (calc_row, geo_row)

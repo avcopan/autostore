@@ -6,7 +6,7 @@ from ..models import CalculationRow, GeometryRow
 from . import structure
 
 
-def res_to_rows(res: Results) -> tuple[CalculationRow, GeometryRow]:
+def rows(res: Results) -> tuple[CalculationRow, GeometryRow]:
     """
     Instantiate CalculationRow and GeometryRow from a qcio Results object.
 
@@ -84,6 +84,6 @@ def res_to_rows(res: Results) -> tuple[CalculationRow, GeometryRow]:
         msg = f"Instantiation from {type(res.input_data)} not yet implemented."
         raise NotImplementedError(msg)
 
-    geo_row = structure.struc_to_row(struct)
+    geo_row = structure.geometry_row(struct)
 
     return (calc_row, geo_row)

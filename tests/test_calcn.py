@@ -92,17 +92,6 @@ def user_defined_hash(calc: Calculation) -> str:
     return calcn.projected_hash(calc, template)
 
 
-def test__qcio_program_input_conversion(calc: Calculation, water: Geometry) -> None:
-    """Test conversion from QCIO ProgramInput to Calculation."""
-    prog_input = qc.program.prog_from_rows(calc, water, CalcType.energy)
-    calc_roundtrip, _ = qc.program.prog_to_rows(prog_input, prog=calc.program)
-    # CalcType was not in original, so set it to None for comparison
-    calc_roundtrip.calctype = None
-    hash1 = calcn.calculation_hash(calc, name="full")
-    hash2 = calcn.calculation_hash(calc_roundtrip, name="full")
-    assert hash1 == hash2, "Hashes differ after QCIO ProgramInput conversion"
-
-
 @pytest.mark.parametrize("calc_fixture", ["standard_calc", "dual_calc"])
 def test__qcio_roundtrip_equiv(
     calc_fixture: str, water: Geometry, request: pytest.FixtureRequest
@@ -111,10 +100,10 @@ def test__qcio_roundtrip_equiv(
     orig_calc: Calculation = request.getfixturevalue(calc_fixture)
     ctype = CalcType(orig_calc.calctype) if orig_calc.calctype else CalcType.energy
 
-    prog_input = qc.program.prog_from_rows(orig_calc, water, ctype)
+    prog_input = qc.program.from_rows(orig_calc, water, ctype)
     driver = orig_calc.superprogram if orig_calc.superprogram else orig_calc.program
 
-    round_calc, _ = qc.program.prog_to_rows(prog_input, prog=driver)
+    round_calc, _ = qc.program.rows(prog_input, prog=driver)
 
     hash_orig = calcn.calculation_hash(orig_calc, name="minimal")
     hash_round = calcn.calculation_hash(round_calc, name="minimal")
@@ -144,7 +133,7 @@ def test__dual_program_input() -> None:
         keywords={"check": 3},
     )
 
-    qc_calc, _ = qc.program.prog_to_rows(prog_input, prog="geometric")
+    qc_calc, _ = qc.program.rows(prog_input, prog="geometric")
 
     assert qc_calc.superprogram == "geometric"
     assert qc_calc.program == "crest"

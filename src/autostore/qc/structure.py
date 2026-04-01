@@ -6,7 +6,7 @@ from qcio import Structure
 from ..models import GeometryRow
 
 
-def struc_to_row(struc: Structure) -> GeometryRow:
+def geometry_row(struc: Structure) -> GeometryRow:
     """
     Generate Geometry from QCIO Structure.
 

@@ -84,7 +84,7 @@ class GeometryRow(SQLModel, table=True):
     # automatically stay in sync with any inserts or updates.
 
 
-def row_to_geometry(geo_row: GeometryRow) -> Geometry:
+def automol_geometry(geo_row: GeometryRow) -> Geometry:
     """
     Instantiate automol Geometry from GeometryRow.
 
@@ -105,7 +105,7 @@ def row_to_geometry(geo_row: GeometryRow) -> Geometry:
     )
 
 
-def row_from_geometry(geo: Geometry) -> GeometryRow:
+def from_automol_geometry(geo: Geometry) -> GeometryRow:
     """
     Instantiate GeometryRow from automol Geometry.
 
@@ -126,7 +126,7 @@ def row_from_geometry(geo: Geometry) -> GeometryRow:
     )
 
 
-def row_from_smiles(smi: str) -> GeometryRow:
+def from_smiles(smi: str) -> GeometryRow:
     """
     Instantiate automol Geometry from GeometryRow.
 
@@ -139,11 +139,11 @@ def row_from_smiles(smi: str) -> GeometryRow:
     -------
         GeometryRow
     """
-    geo = automol.geom.geo_from_smiles(smi)
-    return row_from_geometry(geo)
+    geo = automol.geom.from_smiles(smi)
+    return from_automol_geometry(geo)
 
 
-def row_to_inchi(geo_row: GeometryRow) -> str:
+def inchi(geo_row: GeometryRow) -> str:
     """
     Provide InChI string from AutoMol Geometry.
 
@@ -156,8 +156,8 @@ def row_to_inchi(geo_row: GeometryRow) -> str:
     -------
         InChI string.
     """
-    geo = row_to_geometry(geo_row)
-    return automol.geom.geo_to_inchi(geo)
+    geo = automol_geometry(geo_row)
+    return automol.geom.inchi(geo)
 
 
 # Listeners
