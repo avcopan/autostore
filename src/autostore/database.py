@@ -56,6 +56,11 @@ class Database:
         -------
         row_id
             id corresponding to entry in model table.
+
+        Raises
+        ------
+        SQLAlchemyError
+            Database row failed to write.
         """
         try:
             with self.session() as session:
@@ -68,9 +73,7 @@ class Database:
             msg = f"Failed to write {row = } to database."
             raise RuntimeError(msg) from e
 
-    def fetch(
-        self, *, model: type[ModelT], row_id: int
-    ) -> ModelT | type[ModelT] | None:
+    def fetch(self, *, model: type[ModelT], row_id: int) -> ModelT:
         """
         Fetch rows based on row id.
 
@@ -85,9 +88,26 @@ class Database:
         -------
         model
             Instance of a database model class.
+
+        Raises
+        ------
+        LookupError
+            Row ID is not found in model table.
+        TypeError
+            Return type is not a database model.
         """
         with self.session() as session:
-            return session.get(model, row_id)
+            row = session.get(model, row_id)
+
+            if row is None:
+                msg = f"Unable to find `{model.__tablename__}` row with ID {id}."
+                raise LookupError(msg)
+
+            if not isinstance(row, model):
+                msg = f"{row = }, {model = }"
+                raise TypeError(msg)
+
+            return row
 
     def query(
         self, *, model: type[ModelT], **attributes: float | str | None
