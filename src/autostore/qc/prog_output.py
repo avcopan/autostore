@@ -1,5 +1,7 @@
 """qc ProgramOutput interface."""
 
+from automol import geometry_hash
+
 from qcdata import DualProgramInput, ProgramInput, ProgramOutput
 
 from ..models import CalculationRow, GeometryRow
@@ -103,4 +105,9 @@ def geometry_row(res: ProgramOutput) -> GeometryRow:
         msg = f"Instantiation from {type(res.input_data)} not yet implemented."
         raise NotImplementedError(msg)
 
-    return structure.geometry_row(struct)
+    geo_row = structure.geometry_row(struct)
+
+    if geo_row.hash is None:
+        geo_row.hash = geometry_hash(geo_row, decimals=6)
+
+    return geo_row

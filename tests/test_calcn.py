@@ -4,7 +4,7 @@ import pytest
 from automol import Geometry
 from qcdata import CalcType, DualProgramInput, Model, ProgramArgs, Structure
 
-from autostore import Calculation, calcn, qc
+from autostore import CalculationRow, calcn, qc
 from autostore.calcn import hash_registry
 
 
@@ -18,9 +18,9 @@ def water() -> Geometry:
 
 
 @pytest.fixture
-def calc() -> Calculation:
+def calc() -> CalculationRow:
     """Define calculation fixture."""
-    return Calculation(
+    return CalculationRow(
         program="p",
         method="m",
         keywords={"a": {"c": "x", "d": "y"}, "b": {"c": "x", "d": "y"}},
@@ -28,13 +28,13 @@ def calc() -> Calculation:
 
 
 @pytest.fixture
-def calc_reordered() -> Calculation:
+def calc_reordered() -> CalculationRow:
     """Define calculation fixture.
 
     Same as `calc` but with different field and keyword order.
     Should match for any hash.
     """
-    return Calculation(
+    return CalculationRow(
         keywords={"b": {"d": "y", "c": "x"}, "a": {"d": "y", "c": "x"}},
         method="m",
         program="p",
@@ -42,14 +42,14 @@ def calc_reordered() -> Calculation:
 
 
 @pytest.fixture
-def calc_keyword_change() -> Calculation:
+def calc_keyword_change() -> CalculationRow:
     """Define calculation fixture.
 
     Same as `calc` but with one nested keyword changed ('d' in keyword 'b').
     Should match for minimal hash, but not for full hash.
     Should also match for projected hash against `template`.
     """
-    return Calculation(
+    return CalculationRow(
         program="p",
         method="m",
         keywords={"a": {"c": "x", "d": "y"}, "b": {"c": "x", "d": "z"}},
@@ -57,9 +57,9 @@ def calc_keyword_change() -> Calculation:
 
 
 @pytest.fixture
-def standard_calc() -> Calculation:
+def standard_calc() -> CalculationRow:
     """Define standard single-program calculation."""
-    return Calculation(
+    return CalculationRow(
         program="orca",
         method="b3lyp",
         basis="6-31g",
@@ -69,9 +69,9 @@ def standard_calc() -> Calculation:
 
 
 @pytest.fixture
-def dual_calc() -> Calculation:
+def dual_calc() -> CalculationRow:
     """Define standard dual-program calculation."""
-    return Calculation(
+    return CalculationRow(
         program="crest",
         method="gfn2",
         superprogram_keywords={"check": "3"},
@@ -82,9 +82,9 @@ def dual_calc() -> Calculation:
 
 
 @hash_registry.register("user_defined")
-def user_defined_hash(calc: Calculation) -> str:
+def user_defined_hash(calc: CalculationRow) -> str:
     """User-defined hash function for testing."""
-    template = Calculation(
+    template = CalculationRow(
         program="P",
         method="M",
         keywords={"a": {"c": "X", "d": "Y"}, "b": {"c": "X"}},
@@ -97,7 +97,7 @@ def test__qc_roundtrip_equiv(
     calc_fixture: str, water: Geometry, request: pytest.FixtureRequest
 ) -> None:
     """Test conversion from Calculation -> ProgramInput -> Calculation."""
-    orig_calc: Calculation = request.getfixturevalue(calc_fixture)
+    orig_calc: CalculationRow = request.getfixturevalue(calc_fixture)
     ctype = CalcType(orig_calc.calctype) if orig_calc.calctype else CalcType.energy
 
     prog_input = qc.prog_input.from_automech(orig_calc, water, ctype)
@@ -159,7 +159,7 @@ def test__hash_registry() -> None:
     hash_registry.available(),
 )
 def test__reordered(
-    calc: Calculation, calc_reordered: Calculation, hash_name: str
+    calc: CalculationRow, calc_reordered: CalculationRow, hash_name: str
 ) -> None:
     """Test that reordering fields does not change hash."""
     hash1 = calcn.calculation_hash(calc, hash_name)
@@ -176,8 +176,8 @@ def test__reordered(
     ],
 )
 def test__keyword_change(
-    calc: Calculation,
-    calc_keyword_change: Calculation,
+    calc: CalculationRow,
+    calc_keyword_change: CalculationRow,
     hash_name: str,
     *,
     should_match: bool,

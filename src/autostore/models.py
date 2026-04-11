@@ -10,139 +10,163 @@ from sqlalchemy.types import JSON, String
 from sqlmodel import Column, Field, Relationship, Session, SQLModel, select
 
 from .calcn import Calculation, calculation_hash, hash_registry
-from .types import FloatArrayTypeDecorator, PathTypeDecorator, Role, RowID
+from .types import (
+    FloatArrayTypeDecorator,
+    PathTypeDecorator,
+    Role,
+    RowID,
+)
 
 
 # --- Link Models -------------------------------
-class StationaryIdentityLink(SQLModel, table=True):
-    """
-    Stationary point to identity link row.
-
-    Parameters
-    ----------
-    stationary_id
-        Foreign key to the associated molecular structure; part of the
-        composite primary key.
-    identity_id
-        Foreign key to the calculation producing the stationary point; part of
-        the composite primary key.
-    """
-
-    __tablename__ = "stationary_identity_link"
-
-    stationary_id: RowID = Field(foreign_key="stationary_point.id", primary_key=True)
-    identity_id: RowID = Field(foreign_key="identity.id", primary_key=True)
-
-
 class CalculationGeometryLink(SQLModel, table=True):
     """
-    Calculation to geometry link row.
+    Link CalculationRows to GeometryRows.
 
-    Parameters
+    Attributes
     ----------
     geometry_id
-        Foreign key to the associated geometry; part of the
-        composite primary key.
+        Foreign key to the linked geometry.
     calculation_id
-        Foreign key to the associated calculation; part of
-        the composite primary key.
+        Foreign key to the linked geometry.
     role
-        Role of the geometry in the calculation (e.g. "input", "output")
+        Role of the geometry in the calculation.
     """
 
+    # - SQL Metadata --------
     __tablename__ = "calculation_geometry_link"
     model_config = ConfigDict(use_enum_values=True)
+    # - Row id --------------
+    # - Foreign keys --------
+    geometry_id: RowID = Field(
+        foreign_key="geometry.id",
+        primary_key=True,
+        ondelete="CASCADE",
+        description="Foreign key to the linked geometry.",
+    )
+    calculation_id: RowID = Field(
+        foreign_key="calculation.id",
+        primary_key=True,
+        ondelete="CASCADE",
+        description="Foreign key to the linked geometry.",
+    )
+    # - Attributes ----------
+    role: Role = Field(description="Role of the geometry in the calculation.")
+    # - Linked table --------
+    # - Linked tables -------
 
-    geometry_id: RowID = Field(foreign_key="geometry.id", primary_key=True)
-    calculation_id: RowID = Field(foreign_key="calculation.id", primary_key=True)
-    role: Role
+
+class StationaryIdentityLink(SQLModel, table=True):
+    """Link StationaryPointRows to IdentityRows."""
+
+    # - SQL Metadata --------
+    __tablename__ = "stationary_identity_link"
+    # - Row id --------------
+    # - Foreign keys --------
+    stationary_id: RowID = Field(
+        foreign_key="stationary_point.id",
+        primary_key=True,
+        ondelete="CASCADE",
+        description="Foreign key to the linked stationary point.",
+    )
+    identity_id: RowID = Field(
+        foreign_key="identity.id",
+        primary_key=True,
+        ondelete="CASCADE",
+        description="Foreign key to the linked identity.",
+    )
+    # - Attributes ----------
+    # - Linked table --------
+    # - Linked tables -------
+
+
+class StationaryStageLink(SQLModel, table=True):
+    """Link StationaryPointRows to StageRows."""
+
+    # - SQL Metadata --------
+    __tablename__ = "stationary_stage_link"
+    # - Row id --------------
+    # - Foreign keys --------
+    stationary_id: RowID = Field(
+        foreign_key="stationary_point.id",
+        primary_key=True,
+        ondelete="CASCADE",
+        description="Foreign key to the linked stationary point.",
+    )
+    stage_id: RowID = Field(
+        foreign_key="stage.id",
+        primary_key=True,
+        ondelete="CASCADE",
+        description="Foreign key to the linked reaction stage.",
+    )
+    # - Attributes ----------
+    # - Linked table --------
+    # - Linked tables -------
 
 
 # --- Calculation Models ------------------------
 class CalculationRow(Calculation, SQLModel, table=True):
-    """
-    Calculation metadata table row.
+    """Calculation input parameters and metadata."""
 
-    Parameters
-    ----------
-    input_geometry_id
-        GeometryRow ID corresponding to input Geometry
-    output_geometry_id
-        GeometryRow ID corresponding to output Geometry
-    program
-        The quantum chemistry program used (e.g., "Psi4", "Gaussian").
-    superprogram
-        The geometry optimizer program used (e.g., "geomeTRIC"), if applicable.
-    method
-        Computational method (e.g., "B3LYP", "MP2").
-    basis
-        Basis set, if applicable.
-    input
-        Input file for the calculation, if applicable.
-    keywords
-        QCIO keywords for the calculation.
-    superprogram_keywords
-        Geometry optimizer keywords for the calculation.
-    cmdline_args
-        Command line arguments for the calculation.
-    files
-        Additional files required for the calculation.
-    calctype
-        Type of calculation (e.g., "energy", "gradient", "hessian").
-    program_version
-        Version of the quantum chemistry program.
-    superprogram_version
-        Version of the geometry optimizer program.
-    scratch_dir
-        Working directory.
-    wall_time
-        Wall time.
-    hostname
-        Name of host machine.
-    hostcpus
-        Number of CPUs on host machine.
-    hostmem
-        Amount of memory on host machine.
-    extras
-        Additional metadata.
-
-    Linked Tables
-    -------------
-    energies
-        Corresponding EnergyRow(s).
-    hashes
-        Corresponding CalculationHashRow(s).
-    stationary_points
-        Corresponding StationaryPointRow(s).
-    """
-
+    # - SQL Metadata --------
     __tablename__ = "calculation"
-
+    # - Row id --------------
     id: RowID | None = Field(default=None, primary_key=True)
-
+    # - Foreign keys --------
     # Have to redeclare these fields for sql type verification.
+    # - Program Input -------
+    program: str = Field(description="Quantum chemistry program used (psi4, ORCA, ...)")
+    calctype: str = Field(description="Calculation type (energy, optimization, ...)")
+    method: str = Field(description="Computational method (B3LYP, MP2, ...)")
+    basis: str | None = Field(default=None, description="Basis set.")
     keywords: dict[str, str | dict | None] = Field(
         default_factory=dict,
         sa_column=Column(JSON),
-    )
-    superprogram_keywords: dict[str, str | dict | None] = Field(
-        default_factory=dict,
-        sa_column=Column(JSON),
+        description="Quantum chemistry program keywords.",
     )
     cmdline_args: list[str] = Field(
         default_factory=list,
         sa_column=Column(JSON),
+        description="Command line arguments.",
     )
+    input: str | None = Field(default=None, description="Input file.")
     files: dict[str, str] = Field(
         default_factory=dict,
         sa_column=Column(JSON),
+        description="Additional input files.",
     )
-    extras: dict[str, str | dict | None] = Field(
+    # - SuperProgram Input --
+    superprogram: str | None = Field(
+        default=None, description="Geometry optimizer program used (geomeTRIC, ...)"
+    )
+    superprogram_keywords: dict[str, str | dict | None] = Field(
         default_factory=dict,
         sa_column=Column(JSON),
+        description="Geometry optimizer keywords.",
     )
-    scratch_dir: Path | None = Field(default=None, sa_column=Column(PathTypeDecorator))
-
+    # - Provenance ----------
+    program_version: str | None = Field(default=None, description="Program version.")
+    superprogram_version: str | None = Field(
+        default=None, description="Superprogram version, if applicable."
+    )
+    scratch_dir: Path | None = Field(
+        default=None,
+        sa_column=Column(PathTypeDecorator),
+        description="Working directory.",
+    )
+    wall_time: float | None = Field(default=None, description="Wall time.")
+    hostname: str | None = Field(default=None, description="Name of host machine.")
+    hostcpus: int | None = Field(
+        default=None, description="Number of CPUs on host machine."
+    )
+    hostmem: int | None = Field(
+        default=None, description="Amount of memory on host machine."
+    )
+    extras: dict[str, str | dict | None] = Field(
+        default_factory=dict, sa_column=Column(JSON), description="Additional metadata."
+    )
+    # - Linked table --------
+    # - Linked tables -------
     geometries: list["GeometryRow"] = Relationship(
         back_populates="calculations", link_model=CalculationGeometryLink
     )
@@ -158,39 +182,276 @@ class CalculationRow(Calculation, SQLModel, table=True):
 
 
 class CalculationHashRow(SQLModel, table=True):
-    """
-    Hash value for a calculation.
+    """Hash value for a calculation."""
 
-    One row corresponds to one hash type applied to one calculation.
-
-    Parameters
-    ----------
-    id: int
-        CalculationHashRow id.
-    calculation_id: int
-        CalculationRow id.
-    name: str
-        Type of CalculationRow hash (e.g., "minimal" or "full")
-    value: str
-        Value of CalculationRow hash.
-
-    Linked Tables
-    -------------
-    calculation
-        Corresponding CalculationRow.
-    """
-
+    # - SQL Metadata --------
     __tablename__ = "calculation_hash"
-
+    # - Row id --------------
     id: RowID | None = Field(default=None, primary_key=True)
+    # - Foreign keys --------
     calculation_id: RowID = Field(
-        foreign_key="calculation.id", index=True, nullable=False, ondelete="CASCADE"
+        foreign_key="calculation.id",
+        index=True,
+        nullable=False,
+        ondelete="CASCADE",
+        description="Foreign key to the linked geometry.",
+    )
+    # - Attributes ----------
+    name: str = Field(
+        index=True, description="Type of CalculationRow hash (minimal, full, ...)"
+    )
+    value: str = Field(
+        sa_column=Column(String(64), index=True, nullable=False),
+        description="Value of CalculationRow hash.",
+    )
+    # - Linked table --------
+    calculation: CalculationRow = Relationship(back_populates="hashes")
+    # - Linked tables -------
+
+
+# --- Geometry Models ---------------------------
+class GeometryRow(Geometry, SQLModel, table=True):
+    """Molecular geometry."""
+
+    # - SQL Metadata --------
+    __tablename__ = "geometry"
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    # - Row id --------------
+    id: RowID | None = Field(default=None, primary_key=True)
+    # - Foreign keys --------
+    # - Attributes ----------
+    symbols: list[str] = Field(
+        sa_column=Column(JSON), description="Atomic symbols in order."
+    )
+    coordinates: FloatArray = Field(
+        sa_column=Column(FloatArrayTypeDecorator),
+        description="Cartesian coordinates of atoms in Angstrom.",
+    )
+    charge: int = Field(default=0, description="Total molecular charge.")
+    spin: int = Field(default=0, description="Number of unpaired electrons.")
+    hash: str | None = Field(
+        default=None,
+        sa_column=Column(String(64), index=True, nullable=True, unique=True),
+    )
+    # ^ Populated by event listener
+    # - Linked table --------
+    stationary_point: "StationaryPointRow" = Relationship(back_populates="geometry")
+    # - Linked tables -------
+    calculations: list["CalculationRow"] = Relationship(
+        back_populates="geometries", link_model=CalculationGeometryLink
+    )
+    energies: list["EnergyRow"] = Relationship(
+        back_populates="geometry", cascade_delete=True
     )
 
-    name: str = Field(index=True)
-    value: str = Field(sa_column=Column(String(64), index=True, nullable=False))
+    # Validate coordinates shape with a field validator:
+    #    @field_validator("coordinates")
+    #    @classmethod
+    #    def validate_shape(cls, v):
+    #        if not all(len(row) == 3 for row in v):
+    #            raise ValueError("Coordinates must be shape (N, 3)")  # noqa: ERA001
+    #        return v  # noqa: ERA001
 
-    calculation: CalculationRow = Relationship(back_populates="hashes")
+    # Add formula field for indexing:
+    #    formula: str = Field(sa_column=Column(String, nullable=False, index=True))  # noqa: E501, ERA001
+
+    # Define symbols -> formula conversion function:
+    #    def formula_from_symbols(symbols: list[str]) -> str
+
+    # Attach SQLAlchemy event listener to auto-set formula on insert:
+    #     from sqlalchemy import event  # noqa: ERA001
+    #     @event.listens_for(GeometryRow, "before_insert")
+    #     @event.listens_for(GeometryRow, "before_update")
+    #     def populate_formula(mapper, connection, target: GeometryRow):
+    #         target.formula = formula_from_symbols(target.symbols)  # noqa: ERA001
+    # This will implement the symbol-formula sync at the ORM level, so that they
+    # automatically stay in sync with any inserts or updates.
+
+
+# --- Data Models -------------------------------
+class EnergyRow(SQLModel, table=True):
+    """Energy calculation results."""
+
+    # - SQL Metadata --------
+    __tablename__ = "energy"
+    # - Row id --------------
+    id: RowID | None = Field(default=None, primary_key=True)
+    # - Foreign keys --------
+    geometry_id: RowID | None = Field(
+        default=None,
+        foreign_key="geometry.id",
+        ondelete="CASCADE",
+        description="Foreign key to the linked geometry.",
+    )
+    calculation_id: RowID | None = Field(
+        default=None,
+        foreign_key="calculation.id",
+        ondelete="CASCADE",
+        description="Foreign key to the linked calculation.",
+    )
+    # - Attributes ----------
+    value: float = Field(description="Energy in Hartree.")
+    # - Linked table --------
+    calculation: CalculationRow = Relationship(back_populates="energies")
+    geometry: GeometryRow = Relationship(back_populates="energies")
+    # - Linked tables -------
+
+
+# --- Stationary Models -------------------------
+class StationaryPointRow(SQLModel, table=True):
+    """Stationary point geometries."""
+
+    # - SQL Metadata --------
+    __tablename__ = "stationary_point"
+    # - Row id --------------
+    id: RowID | None = Field(default=None, primary_key=True)
+    # - Foreign keys --------
+    geometry_id: RowID = Field(
+        foreign_key="geometry.id",
+        description="Foreign key to the linked geometry.",
+    )
+    calculation_id: RowID = Field(
+        foreign_key="calculation.id",
+        description="Foreign key to the linked calculation.",
+    )
+    # - Attributes ----------
+    order: int = Field(
+        description="Order of the stationary point (minimum = 0, transition = 1, ...)"
+    )
+    is_pseudo: bool = Field(description="Whether this is a pseudo stationary point.")
+    # - Linked table --------
+    geometry: "GeometryRow" = Relationship(back_populates="stationary_point")
+    calculation: "CalculationRow" = Relationship(back_populates="stationary_points")
+    # - Linked tables -------
+    identities: list["IdentityRow"] = Relationship(
+        back_populates="stationary_points", link_model=StationaryIdentityLink
+    )
+    metrics: list["MetricRow"] = Relationship(
+        back_populates="stationary_point",
+    )
+    stages: list["StageRow"] = Relationship(
+        back_populates="stationary_points", link_model=StationaryStageLink
+    )
+
+
+class IdentityRow(SQLModel, table=True):
+    """Stationary point identities."""
+
+    # - SQL Metadata --------
+    __tablename__ = "identity"
+    # - Row id --------------
+    id: RowID | None = Field(default=None, primary_key=True)
+    # - Foreign keys --------
+    # - Attributes ----------
+    type: str = Field(description="Category of the identity (stereoisomer, ...)")
+    algorithm: str = Field(description="Method used to determine identity (InChI, ...)")
+    value: str = Field(description="Value of the identity algorithm.")
+    # - Linked table --------
+    # - Linked tables -------
+    stationary_points: list["StationaryPointRow"] = Relationship(
+        back_populates="identities", link_model=StationaryIdentityLink
+    )
+
+
+class MetricRow(SQLModel, table=True):
+    """Metrics for comparing conformers."""
+
+    # - SQL Metadata --------
+    __tablename__ = "metric"
+    # - Row id --------------
+    id: RowID | None = Field(default=None, primary_key=True)
+    # - Foreign keys --------
+    stationary_id: RowID = Field(
+        foreign_key="stationary_point.id",
+        index=True,
+        description="Foreign key to the linked stationary point.",
+    )
+    # - Attributes ----------
+    type: str = Field(description="Category of the metric (Inertia Tensor, ...)")
+    algorithm: str = Field(description="Method used to determine metric (Kabsch, ...)")
+    value: str = Field(description="Value of the metric algorithm.")
+    # - Linked table --------
+    stationary_point: "StationaryPointRow" = Relationship(back_populates="metrics")
+    # - Linked tables -------
+
+
+# --- Stage Models ------------------------------
+class StageRow(SQLModel, table=True):
+    """Reaction stage."""
+
+    # - SQL Metadata --------
+    __tablename__ = "stage"
+    # - Row id --------------
+    id: RowID | None = Field(default=None, primary_key=True)
+    # - Foreign keys --------
+    # - Attributes ----------
+    is_ts: bool = Field(description="Stage represents transition state.")
+    # - Linked table --------
+    steps_1: list["StepRow"] = Relationship(
+        back_populates="stage1",
+        sa_relationship_kwargs={"foreign_keys": "[StepRow.stage_id1]"},
+    )
+    steps_2: list["StepRow"] = Relationship(
+        back_populates="stage2",
+        sa_relationship_kwargs={"foreign_keys": "[StepRow.stage_id2]"},
+    )
+    steps_ts: list["StepRow"] = Relationship(
+        back_populates="stage_ts",
+        sa_relationship_kwargs={"foreign_keys": "[StepRow.stage_id_ts]"},
+    )
+    # - Linked tables -------
+    stationary_points: list["StationaryPointRow"] = Relationship(
+        back_populates="stages", link_model=StationaryStageLink
+    )
+
+
+# --- Stage Models ------------------------------
+class StepRow(SQLModel, table=True):
+    """Reaction step."""
+
+    # - SQL Metadata --------
+    __tablename__ = "step"
+    # - Row id --------------
+    id: RowID | None = Field(default=None, primary_key=True)
+    # - Foreign keys --------
+    stage_id1: RowID = Field(
+        foreign_key="stage.id",
+        index=True,
+        description="Foreign key to the 1st reaction stage.",
+    )
+    stage_id2: RowID = Field(
+        foreign_key="stage.id",
+        index=True,
+        description="Foreign key to the 2nd reaction stage.",
+    )
+    stage_id_ts: RowID = Field(
+        foreign_key="stage.id",
+        index=True,
+        description="Foreign key to the TS reaction stage.",
+    )
+    # - Attributes ----------
+    is_barrierless: bool = Field(
+        description="Reaction step does not involve a TS stage."
+    )
+    # - Linked table --------
+    stage1: "StageRow" = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[StepRow.stage_id1]"}
+    )
+    stage2: "StageRow" = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[StepRow.stage_id2]"}
+    )
+    stage_ts: "StageRow" = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[StepRow.stage_id_ts]"}
+    )
+    # - Linked tables -------
+
+
+# --- Listeners ---------------------------------
+@event.listens_for(GeometryRow, "before_insert")
+def populate_geometry_hash(mapper, connection, target: GeometryRow) -> None:  # noqa: ANN001, ARG001
+    """Populate GeometryRow hash before inserts and updates."""
+    if target.hash is None:
+        target.hash = geom.geometry_hash(target)
 
 
 @event.listens_for(Session, "after_flush")
@@ -221,250 +482,8 @@ def populate_calculation_hashes(session, flush_context) -> None:  # noqa: ANN001
             )
 
 
-# --- Geometry Models ---------------------------
-class GeometryRow(Geometry, SQLModel, table=True):
-    """
-    Molecular geometry table row.
-
-    Parameters
-    ----------
-    id
-        Primary key.
-    symbols
-        Atomic symbols in order (e.g., ``["H", "O", "H"]``).
-        The length of ``symbols`` must match the number of atoms.
-    coordinates
-        Cartesian coordinates of the atoms in Angstroms.
-        Shape is ``(len(symbols), 3)`` and the ordering corresponds to ``symbols``.
-    charge
-        Total molecular charge.
-    spin
-        Number of unpaired electrons, i.e. two times the spin quantum number (``2S``).
-    hash
-        Optional hash of the geometry for quick comparisons.
-    energy
-        Relationship to the associated energy record, if present.
-
-    Linked Tables
-    -------------
-    energies
-        Corresponding EnergyRow(s).
-    stationary_point
-        Corresponding StationaryPointRow.
-    """
-
-    __tablename__ = "geometry"
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    id: RowID | None = Field(default=None, primary_key=True)
-
-    symbols: list[str] = Field(sa_column=Column(JSON))
-    coordinates: FloatArray = Field(sa_column=Column(FloatArrayTypeDecorator))
-    hash: str | None = Field(
-        sa_column=Column(String(64), index=True, nullable=True, unique=True),
-        default=None,
-    )
-    # ^ Populated by event listener below
-
-    calculations: list["CalculationRow"] = Relationship(
-        back_populates="geometries", link_model=CalculationGeometryLink
-    )
-    energies: list["EnergyRow"] = Relationship(
-        back_populates="geometry", cascade_delete=True
-    )
-    stationary_point: "StationaryPointRow" = Relationship(back_populates="geometry")
-
-    # Validate coordinates shape with a field validator:
-    #    @field_validator("coordinates")
-    #    @classmethod
-    #    def validate_shape(cls, v):
-    #        if not all(len(row) == 3 for row in v):
-    #            raise ValueError("Coordinates must be shape (N, 3)")  # noqa: ERA001
-    #        return v  # noqa: ERA001
-
-    # Add formula field for indexing:
-    #    formula: str = Field(sa_column=Column(String, nullable=False, index=True))  # noqa: E501, ERA001
-
-    # Define symbols -> formula conversion function:
-    #    def formula_from_symbols(symbols: list[str]) -> str
-
-    # Attach SQLAlchemy event listener to auto-set formula on insert:
-    #     from sqlalchemy import event  # noqa: ERA001
-    #     @event.listens_for(GeometryRow, "before_insert")
-    #     @event.listens_for(GeometryRow, "before_update")
-    #     def populate_formula(mapper, connection, target: GeometryRow):
-    #         target.formula = formula_from_symbols(target.symbols)  # noqa: ERA001
-    # This will implement the symbol-formula sync at the ORM level, so that they
-    # automatically stay in sync with any inserts or updates.
-
-
-# --- Data Models -------------------------------
-class EnergyRow(SQLModel, table=True):
-    """
-    Energy table row.
-
-    Parameters
-    ----------
-    id
-        Primary key.
-    geometry_id
-        Foreign key referencing the geometry table; part of the composite primary key.
-    calculation_id
-        Foreign key referencing the calculation table; part of the composite
-        primary key.
-    value
-        Energy in Hartree.
-
-    Linked Tables
-    -------------
-    geometry
-        Corresponding GeometryRow.
-    calculation
-        Corresponding CalculationRow.
-    """
-
-    __tablename__ = "energy"
-
-    id: RowID | None = Field(default=None, primary_key=True)
-
-    geometry_id: RowID | None = Field(
-        default=None, foreign_key="geometry.id", ondelete="CASCADE"
-    )
-    calculation_id: RowID | None = Field(
-        default=None, foreign_key="calculation.id", ondelete="CASCADE"
-    )
-
-    value: float
-
-    calculation: CalculationRow = Relationship(back_populates="energies")
-    geometry: GeometryRow = Relationship(back_populates="energies")
-
-
-# --- Stationary Models -------------------------
-class StationaryPointRow(SQLModel, table=True):
-    """
-    Stationary point table row.
-
-    Stores information about optimized geometries.
-
-    Parameters
-    ----------
-    id
-        Primary key.
-    geometry_id
-        Foreign key to the associated molecular geometry.
-    calculation_id
-        Foreign key to the calculation producing the stationary point.
-    order
-        Order of the stationary point (e.g., minimum = 0, transition = 1)
-
-    Linked Tables
-    -------------
-    geometry
-        Corresponding GeometryRow.
-    calculation
-        Corresponding CalculationRow.
-    identities
-        Corresponding IdentityRow(s).
-    """
-
-    __tablename__ = "stationary_point"
-
-    id: RowID | None = Field(default=None, primary_key=True)
-
-    geometry_id: RowID = Field(foreign_key="geometry.id")
-    calculation_id: RowID = Field(foreign_key="calculation.id")
-
-    order: int | None = Field(default=-1)
-
-    geometry: "GeometryRow" = Relationship(back_populates="stationary_point")
-    calculation: "CalculationRow" = Relationship(back_populates="stationary_points")
-
-    identities: list["IdentityRow"] = Relationship(
-        back_populates="stationary_points", link_model=StationaryIdentityLink
-    )
-
-    metrics: list["MetricRow"] = Relationship(
-        back_populates="stationary_point",
-    )
-
-
-class IdentityRow(SQLModel, table=True):
-    """
-    Stationary point identity row.
-
-    Parameters
-    ----------
-    id
-        Primary key.
-    type
-        The category this identity falls within (e.g., "stereoisomer").
-    algorithm
-        Method used to determine this identity (e.g., "InChI").
-    value
-        Value produced by the identity algorithm.
-
-    Linked Tables
-    -------------
-    stationary_points
-        Corresponding StationaryPointRow(s).
-    """
-
-    __tablename__ = "identity"
-
-    id: RowID | None = Field(default=None, primary_key=True)
-
-    type: str
-    algorithm: str
-    value: str
-
-    stationary_points: list["StationaryPointRow"] = Relationship(
-        back_populates="identities", link_model=StationaryIdentityLink
-    )
-
-
-class MetricRow(SQLModel, table=True):
-    """
-    Storage for conformer comparison metrics (e.g., inertia tensor RMSD).
-
-    Parameters
-    ----------
-    id
-        Primary key.
-    stationary_id
-        Foreign key to the analyzed geometry.
-    reference_id
-        Foreign key to the reference geometry.
-    type
-        The category this metric falls within (e.g., "conformer").
-    algorithm
-        Method used to determine this metric (e.g., "moi rmsd").
-    value
-        Value produced by the metric algorithm.
-
-    Linked Tables
-    -------------
-    stationary_point
-        Corresponding StationaryPointRow.
-    """
-
-    __tablename__ = "metric"
-
-    id: RowID | None = Field(default=None, primary_key=True)
-
-    stationary_id: RowID = Field(foreign_key="stationary_point.id", index=True)
-
-    type: str = Field(index=True)
-    label: str
-    value: float
-
-    stationary_point: "StationaryPointRow" = Relationship(back_populates="metrics")
-
-
-# --- Listeners ---------------------------------
 @event.listens_for(StationaryPointRow, "after_insert")
-def stationary_post_processing(mapper, connection, target: StationaryPointRow) -> None:  # noqa: ANN001, ARG001
+def stationary_inchi(mapper, connection, target: StationaryPointRow) -> None:  # noqa: ANN001, ARG001
     """Automatically tags InChI and default metrics after inserting StationaryPoint."""
     session = Session(bind=connection)
 
@@ -512,10 +531,3 @@ def stationary_post_processing(mapper, connection, target: StationaryPointRow) -
         session.rollback()
         msg = f"Failed to generate InChI {target.id}"
         raise RuntimeError(msg) from e
-
-
-@event.listens_for(GeometryRow, "before_insert")
-def populate_geometry_hash(mapper, connection, target: GeometryRow) -> None:  # noqa: ANN001, ARG001
-    """Populate GeometryRow hash before inserts and updates."""
-    if target.hash is None:
-        target.hash = geom.geometry_hash(target)

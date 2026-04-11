@@ -2,7 +2,7 @@
 
 import automol
 from automol import Geometry
-from qcdata import CalcType, DualProgramInput, Model, ProgramInput
+from qcdata import CalcType, DualProgramInput, Model, ProgramInput, Structure
 
 from ..calcn import Calculation
 from ..models import CalculationRow, GeometryRow

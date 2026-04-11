@@ -1,6 +1,7 @@
 """Database connection."""
 
 from pathlib import Path
+from typing import cast
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Session, SQLModel, create_engine, select
@@ -71,9 +72,43 @@ class Database:
             msg = f"Failed to write {row = } to database."
             raise RuntimeError(msg) from e
 
+    def delete(self, *, model: type[SQLModelT], row_id: RowID) -> None:
+        """
+        Delete a row from the database based on row id.
+
+        Parameters
+        ----------
+        model
+            Database model class, e.g. CalculationRow or GeometryRow.
+        row_id
+            id corresponding to entry in model table.
+
+        Raises
+        ------
+        LookupError
+            Row ID is not found in model table.
+        RuntimeError
+            Database row failed to delete.
+        """
+        try:
+            with self.session() as session:
+                # Reuse the logic of finding the row first
+                row = session.get(model, row_id)
+
+                if row is None:
+                    msg = f"Unable to find {model.__tablename__} row with ID {row_id}."
+                    raise LookupError(msg)
+
+                session.delete(row)
+                session.commit()
+
+        except SQLAlchemyError as e:
+            msg = f"Failed to delete {model.__tablename__} with ID {row_id}."
+            raise RuntimeError(msg) from e
+
     def get(self, *, model: type[SQLModelT], row_id: RowID) -> SQLModelT:
         """
-        Get row based on row id.
+        Get a row from the database based on row id.
 
         Parameters
         ----------
@@ -97,7 +132,7 @@ class Database:
             row = session.get(model, row_id)
 
             if row is None:
-                msg = f"Unable to find `{model.__tablename__}` row with ID {id}."
+                msg = f"Unable to find {model.__tablename__} row with ID {row_id}."
                 raise LookupError(msg)
 
             if not isinstance(row, model):
@@ -137,7 +172,7 @@ class Database:
                 msg = f"No id field returned from {model.__tablename__} query."
                 raise LookupError(msg)
 
-            return ids  # ty:ignore[invalid-return-type]
+            return cast("RowIDs", ids)
 
     def close(self) -> None:
         """Close the database connection.

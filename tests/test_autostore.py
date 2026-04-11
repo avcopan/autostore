@@ -9,7 +9,7 @@ from automol import Geometry
 from qcdata import CalcType, ProgramOutput
 from sqlalchemy import Select
 
-from autostore import Calculation, Database, models, qc
+from autostore import CalculationRow, Database, models, qc
 from autostore.types import Role
 
 
@@ -42,9 +42,9 @@ def h2() -> Geometry:
 
 
 @pytest.fixture
-def xtb_calculation() -> Calculation:
+def xtb_calculation() -> CalculationRow:
     """XTB calculation fixture."""
-    return Calculation(program="crest", method="gfnff")
+    return CalculationRow(program="crest", method="gfnff")
 
 
 @pytest.fixture
@@ -179,7 +179,7 @@ def test_stationary(
 
     # Instantiate StationaryPointRow & write to database
     stp_row = models.StationaryPointRow(
-        geometry_id=out_geom_id, calculation_id=calc_id, order=1
+        geometry_id=out_geom_id, calculation_id=calc_id, order=1, is_pseudo=False
     )
     stp_id = database.add(row=stp_row)
     assert stp_id is not None
