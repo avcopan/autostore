@@ -9,11 +9,11 @@ from sqlalchemy.types import JSON, String, TypeDecorator
 from sqlmodel import SQLModel
 
 # Model Type
-ModelT = TypeVar("ModelT", bound=SQLModel)
+SQLModelT = TypeVar("SQLModelT", bound=SQLModel)
 
 # Row ID Type Aliases
 RowID = int
-RowIDs = Sequence[RowID]
+RowIDs = Sequence[RowID | None]
 
 
 class FloatArrayTypeDecorator(TypeDecorator):
