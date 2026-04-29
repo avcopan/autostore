@@ -15,6 +15,8 @@ from .models import (
     StationaryStageLink,
     StepRow,
 )  # import core Row objects
+from .types import Role
+from .utils import verify_single_iteration
 
 __all__ = [
     "models",
@@ -29,4 +31,6 @@ __all__ = [
     "StationaryPointRow",
     "StationaryStageLink",
     "StepRow",
+    "Role",
+    "verify_single_iteration",
 ]
