@@ -5,7 +5,7 @@ preview = ["pixi-build"]
 
 [dependencies]
 auto-store = { path = "." }
-automol = "==0.0.7"
+automol = "==0.0.10"
 
 [pypi-dependencies]
 qcdata = ">=0.17.0, <0.18"
