@@ -222,6 +222,3 @@ __marimo__/
 
 # pixi build
 *.conda
-
-# Only for template branch
-pixi.lock
