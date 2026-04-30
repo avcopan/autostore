@@ -1,5 +1,5 @@
 [project]
-name = "auto-store"
+name = "autostorage"
 version = "0.0.0"
 authors = [{name = "Andreas V. Copan", email = "avcopan@uga.edu"}]
 requires-python = ">= 3.12"
@@ -44,14 +44,14 @@ include = [
 
 # Import-linter configurations
 [tool.importlinter]
-root_package = "autostore"
+root_package = "autostorage"
 
 [[tool.importlinter.contracts]]
 name = "Module Layering"
 type = "layers"
 layers = [
-    "autostore.layer2",
-    "autostore.layer1",
+    "autostorage.layer2",
+    "autostorage.layer1",
 ]
 
 # Pytest configurations
@@ -59,7 +59,7 @@ layers = [
 testpaths = ["tests", "src"]
 addopts = [
     "--doctest-modules",
-    "--cov=autostore",
+    "--cov=autostorage",
     "--cov-report=term-missing",
     "--cov-report=html",
 ]
@@ -68,7 +68,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE"
 # Pytest-cov configurations
 [tool.coverage.run]
 branch = true
-source = ["autostore"]
+source = ["autostorage"]
 
 [tool.coverage.report]
 show_missing = true
