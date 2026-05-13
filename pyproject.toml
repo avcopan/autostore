@@ -12,7 +12,7 @@ dependencies = [
 
 [build-system]
 build-backend = "uv_build"
-requires = ["uv_build"]
+requires = ["uv_build<0.12"]
 
 # UV build configurations
 [tool.uv.build-backend]
